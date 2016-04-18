@@ -25,8 +25,8 @@ class RTSGame:
         entities.append(self.enemy_bases)
 
         # Make Players - Stores data about each player
-        you = Player(self.my_bases, isEnemy=False)
-        enemy = Player(self.enemy_bases, isEnemy=True)
+        self.you = Player(self.my_bases, isEnemy=False)
+        self.enemy = Player(self.enemy_bases, isEnemy=True)
 
         # Make path entities
         self.paths = []
@@ -38,14 +38,13 @@ class RTSGame:
         # Make button entities
         self.buttons = []
         self.buttons.append(Button(WHITE, (300,25), self.spawn_unit,pygame.image.load(MELEE_IMAGE), "Melee"))
-        self.buttons.append(Button(WHITE, (500,25), self.spawn_unit,pygame.image.load(ARCHER_IMAGE), "Ranged"))
-        self.buttons.append(Button(WHITE, (700,25), self.spawn_unit,pygame.image.load(RECON_IMAGE), "Recon"))
-        self.buttons.append(Button(WHITE, (900,25), self.spawn_unit,pygame.image.load(TANK_IMAGE), "Tank"))
+        self.buttons.append(Button(WHITE, (700,25), self.spawn_unit,pygame.image.load(TANK_IMAGE), "Tank"))
         entities.append(self.buttons)
 
         self.units = []
         self.enemy_units = []
         entities.append(self.units)
+        entities.append(self.enemy_units)
 
         # Performance improvements
         #self.screen = pygame.display.set_mode((1366, 768), (pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF))
@@ -58,6 +57,7 @@ class RTSGame:
         # Main Render Loop
         while True:
             dt = clock.tick(50)
+            ms = dt / 1000.0 # dt in seconds
 
             events = pygame.event.get()
             self.screen.fill((144, 245, 0))  # Green background
@@ -66,7 +66,7 @@ class RTSGame:
                 for item in entity:
                     item.drawon(self.screen, dt)
 
-            text = font.render(str(dt), 1, (10, 10, 10))
+            text = font.render(str(self.you.getMoney()), 1, (10, 10, 10))
             self.screen.blit(text, (25,25))
 
             if not do.empty():
@@ -85,12 +85,10 @@ class RTSGame:
                     if event.key == pygame.K_ESCAPE:
                         sys.exit()
 
-            self.checkCollision()
+            self.checkCollision(ms)
 
             pygame.display.flip()
 
-    # TODO: Remove dependency on base class
-    # TODO: ^ Do not spawn enemies based on class
     def spawn_unit(self, unit):
         i = 0
         for base in self.my_bases:
@@ -100,32 +98,14 @@ class RTSGame:
                     cost = MELEECOST
                     unit = Melee(GREY, (coords[0] + coords[2], coords[1] + coords[3]/2 - 25), RIGHT)
                     self.send.put("{'name': 'spawn_enemy', 'type': 'Melee', 'base': " + str(i) + "}")
-                '''
-                elif unit == "Ranged":
-                    cost = RANGECOST
-                    if player.getName() == "player1":
-                        unit = Ranged(BLACK, (coords[0] + coords[2], coords[1] + coords[3]/2 - 25), RIGHT, player1)
-                    else:
-                        unit = Ranged(BLACK, (coords[0] + coords[2] + 975, coords[1] + coords[3] / 2 - 25), LEFT, player2)
                 elif unit == "Tank":
                     cost = TANKCOST
-                    if player.getName() == "player1":
-                        unit = Tank(RED, (coords[0] + coords[2], coords[1] + coords[3]/2 - 25), RIGHT, player1)
-                    else:
-                        unit = Tank(RED, (coords[0] + coords[2] + 975, coords[1] + coords[3] / 2 - 25), LEFT, player2)
-                elif unit == "Recon":
-                    cost = RECONCOST
-                    if player.getName() == "player1":
-                        unit = Recon(BROWN, (coords[0] + coords[2], coords[1] + coords[3]/2 - 25), RIGHT, player1)
-                    else:
-                        unit = Recon(BROWN, (coords[0] + coords[2] + 975, coords[1] + coords[3] / 2 - 25), LEFT, player2)
-                '''
-                '''
-                if player.getMoney() > cost:
-                    player.removeMoney(cost)
+                    unit = Tank(RED, (coords[0] + coords[2], coords[1] + coords[3]/2 - 25), RIGHT)
+                    self.send.put("{'name': 'spawn_enemy', 'type': 'Tank', 'base': " + str(i) + "}")
+
+                if self.you.getMoney() > cost:
+                    self.you.removeMoney(cost)
                     self.units.append(unit)
-                '''
-                self.units.append(unit)
             i += 1
 
     def spawn_enemy(self, type, base):
@@ -134,16 +114,41 @@ class RTSGame:
         if type == "Melee":
             cost = MELEECOST
             unit = Melee(GREY, (coords[0] + coords[2], coords[1] + coords[3] / 2 - 25), LEFT)
+        if type == "Tank":
+            unit = Tank(GREY, (coords[0] + coords[2], coords[1] + coords[3] / 2 - 25), LEFT)
 
         self.enemy_units.append(unit)
 
-    def checkCollision(self):
+    def checkCollision(self, dt):
         for unit in self.units:
-            ounits = [u for u in self.units if unit.intersects(u.getpos()) and not unit == u]
-            if ounits:  # list is not empty
-                for u in ounits:
-                    self.units.remove(u)
-                    self.units.remove(unit)
+            en_units = [u for u in self.enemy_units if unit.intersects(u.getpos()) and not unit == u]
+            my_units = [u for u in self.units if unit.intersects(u.getpos()) and not unit == u]
+
+            if unit.getpos()[0] > 1200:
+                sys.exit()
+
+            unit.resumeSpeed()
+
+            if en_units:  # list is not empty
+                for u in en_units:  # u is enemies that intersect
+                    u.attack(unit, dt)
+                    unit.attack(u, dt)
+
+                    u.setSpeed(0)
+                    unit.setSpeed(0)
+
+                    if u.getHealth() < 0:
+                        self.enemy_units.remove(u)
+                        self.you.addMoney(u.getReward())
+                        unit.resumeSpeed()
+                    if unit.getHealth() < 0:
+                        self.units.remove(unit)
+                        self.enemy.addMoney(unit.getReward())
+                        u.resumeSpeed()
+
+            if my_units:
+                for u in my_units:
+                    u.setSpeed(0)
 
     def clicked(self, pos):
         for base in self.my_bases:
@@ -156,5 +161,4 @@ class RTSGame:
         for button in self.buttons:
             if button.intersects(pos):
                 button.clicked()
-
                 break

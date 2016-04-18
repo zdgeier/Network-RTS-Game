@@ -8,7 +8,7 @@ class Player:
         return self.basesLeft
 
     def getMoney(self):
-        return self.money
+        return int(5 * round(float(self.money)/5))
 
     def addMoney(self, value):
         self.money += value

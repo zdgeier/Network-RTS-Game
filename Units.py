@@ -9,6 +9,7 @@ class _Unit:  # _ = implementation class
         self.color = color
         self.coords = coords
         self.image = image
+        #self.rect = pygame.rect.Rect((coords[0], coords[1]), (10, 10))
         self.rect = self.image.get_rect()
         self.rect = self.rect.move(self.getpos())
 
@@ -74,11 +75,12 @@ class Button(_Unit):
 # MOVING UNITS
 
 class _MovingUnit(_Unit):
-    def __init__(self, color, coords, health, range, cost, speed, damage, reward, image):
-        _Unit.__init__(self, color, coords, pygame.transform.scale(image, (75, 75)))
+    def __init__(self, color, coords, health, cost, speed, damage, reward, image):
+        _Unit.__init__(self, color, coords, pygame.transform.scale(image, (50, 50)))
         self.health = health
         self.range = range
         self.cost = cost
+        self.default_speed = speed
         self.speed = speed
         self.damage = damage
         self.reward = reward
@@ -92,6 +94,15 @@ class _MovingUnit(_Unit):
         self.rect = self.rect.move(dx, 0)
         screen.blit(self.image, self.rect)
 
+    def setSpeed(self, speed):
+        self.speed = speed
+
+    def resumeSpeed(self):
+        self.speed = self.default_speed
+
+    def getHealth(self):
+        return self.health
+
     def getReward(self):
         return self.reward
 
@@ -102,28 +113,24 @@ class _MovingUnit(_Unit):
         return self.rect.x <= pos[0] <= self.rect.x + self.rect.width \
                and self.rect.y <= pos[1] <= self.rect.y + self.rect.height
 
+    def attack(self, unit, dt):
+        unit.hit(self.damage * dt)
+
+    def hit(self, damage):
+        self.health -= damage
+
+
 class Melee(_MovingUnit):
     def __init__(self, color, coords, dir):
-        '''
-        if player.isEnemy:
-            image = pygame.transform.flip(image, True, False)
-        '''
         image = pygame.image.load("Images/Melee.png")
-        _MovingUnit.__init__(self, color, coords, MELEEHP, MELEERANGE, MELEECOST, dir*23, MELEEDAMAGE, MELEEREWARD, image)
-
-class Ranged(_MovingUnit):
-    def __init__(self, color, coords, dir):
-        image = pygame.image.load("Images/Archer.png")
-        _MovingUnit.__init__(self, color, coords, RANGEHP, RANGERANGE, RANGECOST, dir*21, RANGEDAMAGE, RANGEREWARD, image)
+        if dir == LEFT:
+            image = pygame.transform.flip(image, True, False)
+        _MovingUnit.__init__(self, color, coords, MELEEHP, MELEECOST, dir*23, MELEEDAMAGE, MELEEREWARD, image)
 
 
 class Tank(_MovingUnit):
-    def __init__(self, color, coords, dir, player):
+    def __init__(self, color, coords, dir):
         image = pygame.image.load("Images/Tank.gif")
-        _MovingUnit.__init__(self, color, coords, TANKHP, TANKRANGE, TANKCOST, dir*20, TANKDAMAGE, TANKREWARD, image)
-
-
-class Recon(_MovingUnit):
-    def __init__(self, color, coords, dir, player):
-        image = pygame.image.load("Images/Archer.png")
-        _MovingUnit.__init__(self, color, coords, RECONHP, RECONRANGE, RECONCOST, dir*30, RECONDAMAGE, RECONREWARD, image)
+        if dir == LEFT:
+            image = pygame.transform.flip(image, True, False)
+        _MovingUnit.__init__(self, color, coords, TANKHP, TANKCOST, dir*20, TANKDAMAGE, TANKREWARD, image)
