@@ -8,7 +8,6 @@ class RTSGame:
         self.do = do
         self.send = send
 
-        global player1, player2
         entities = []
 
         # Make base entities
@@ -24,6 +23,10 @@ class RTSGame:
         self.enemy_bases.append(Base(WHITE, (1200, 350, 100, 100), pygame.image.load("Images/temp.png")))
         self.enemy_bases.append(Base(WHITE, (1200, 600, 100, 100), pygame.image.load("Images/temp.png")))
         entities.append(self.enemy_bases)
+
+        # Make Players - Stores data about each player
+        you = Player(self.my_bases, isEnemy=False)
+        enemy = Player(self.enemy_bases, isEnemy=True)
 
         # Make path entities
         self.paths = []
@@ -41,12 +44,14 @@ class RTSGame:
         entities.append(self.buttons)
 
         self.units = []
+        self.enemy_units = []
         entities.append(self.units)
 
         # Performance improvements
         #self.screen = pygame.display.set_mode((1366, 768), (pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF))
         self.screen = pygame.display.set_mode((1366, 768), (pygame.HWSURFACE | pygame.DOUBLEBUF))
         self.screen.set_alpha(None)
+        font = pygame.font.Font(None, 36)
 
         clock = pygame.time.Clock()
 
@@ -60,6 +65,9 @@ class RTSGame:
             for entity in entities:
                 for item in entity:
                     item.drawon(self.screen, dt)
+
+            text = font.render(str(dt), 1, (10, 10, 10))
+            self.screen.blit(text, (25,25))
 
             if not do.empty():
                 dict = do.get()
@@ -84,13 +92,14 @@ class RTSGame:
     # TODO: Remove dependency on base class
     # TODO: ^ Do not spawn enemies based on class
     def spawn_unit(self, unit):
+        i = 0
         for base in self.my_bases:
             if base.active:
                 coords = base.getcoords()
                 if unit == "Melee":
                     cost = MELEECOST
                     unit = Melee(GREY, (coords[0] + coords[2], coords[1] + coords[3]/2 - 25), RIGHT)
-
+                    self.send.put("{'name': 'spawn_enemy', 'type': 'Melee', 'base': " + str(i) + "}")
                 '''
                 elif unit == "Ranged":
                     cost = RANGECOST
@@ -117,6 +126,7 @@ class RTSGame:
                     self.units.append(unit)
                 '''
                 self.units.append(unit)
+            i += 1
 
     def spawn_enemy(self, type, base):
         spawnpoint = self.enemy_bases[base]
@@ -125,7 +135,7 @@ class RTSGame:
             cost = MELEECOST
             unit = Melee(GREY, (coords[0] + coords[2], coords[1] + coords[3] / 2 - 25), LEFT)
 
-        self.units.append(unit)
+        self.enemy_units.append(unit)
 
     def checkCollision(self):
         for unit in self.units:
@@ -146,7 +156,5 @@ class RTSGame:
         for button in self.buttons:
             if button.intersects(pos):
                 button.clicked()
-                self.send.put("{'name': 'spawn_enemy', 'type': 'Melee', 'base': 2}") # TODO: REMOVE
-                break
 
-        return
+                break

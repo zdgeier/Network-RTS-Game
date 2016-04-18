@@ -32,7 +32,6 @@ class _Unit:  # _ = implementation class
         self.color = color
 
     def drawon(self, screen, dt):
-        #screen.blit(self.image, self.rect)
         pygame.draw.rect(screen, self.getcolor(), self.getcoords())
 
 
@@ -90,7 +89,6 @@ class _MovingUnit(_Unit):
         dx = (self.speed * (1 / float(dt)))
         lst[0] += dx
         self.setcoords(tuple(lst))
-        #pygame.draw.rect(screen, self.getcolor(), self.getcoords())
         self.rect = self.rect.move(dx, 0)
         screen.blit(self.image, self.rect)
 
@@ -106,34 +104,26 @@ class _MovingUnit(_Unit):
 
 class Melee(_MovingUnit):
     def __init__(self, color, coords, dir):
-        image = pygame.image.load("Images/Melee.png")
         '''
-        if player.getName() == "player1":
+        if player.isEnemy:
             image = pygame.transform.flip(image, True, False)
         '''
+        image = pygame.image.load("Images/Melee.png")
         _MovingUnit.__init__(self, color, coords, MELEEHP, MELEERANGE, MELEECOST, dir*23, MELEEDAMAGE, MELEEREWARD, image)
 
-'''
 class Ranged(_MovingUnit):
-    def __init__(self, color, coords, dir, player):
+    def __init__(self, color, coords, dir):
         image = pygame.image.load("Images/Archer.png")
-        if player.getName() == "player1":
-            image = pygame.transform.flip(image, True, False)
-        _MovingUnit.__init__(self, color, coords, RANGEHP, RANGERANGE, RANGECOST, dir*21, RANGEDAMAGE, RANGEREWARD, image, player)
+        _MovingUnit.__init__(self, color, coords, RANGEHP, RANGERANGE, RANGECOST, dir*21, RANGEDAMAGE, RANGEREWARD, image)
 
 
 class Tank(_MovingUnit):
     def __init__(self, color, coords, dir, player):
         image = pygame.image.load("Images/Tank.gif")
-        if player.getName() == "player2":
-            image = pygame.transform.flip(image, True, False)
-        _MovingUnit.__init__(self, color, coords, TANKHP, TANKRANGE, TANKCOST, dir*20, TANKDAMAGE, TANKREWARD, image, player)
+        _MovingUnit.__init__(self, color, coords, TANKHP, TANKRANGE, TANKCOST, dir*20, TANKDAMAGE, TANKREWARD, image)
 
 
 class Recon(_MovingUnit):
     def __init__(self, color, coords, dir, player):
         image = pygame.image.load("Images/Archer.png")
-        if player.getName() == "player1":
-            image = pygame.transform.flip(image, True, False)
-        _MovingUnit.__init__(self, color, coords, RECONHP, RECONRANGE, RECONCOST, dir*30, RECONDAMAGE, RECONREWARD, image, player)
-'''
+        _MovingUnit.__init__(self, color, coords, RECONHP, RECONRANGE, RECONCOST, dir*30, RECONDAMAGE, RECONREWARD, image)

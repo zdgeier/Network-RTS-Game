@@ -43,7 +43,7 @@ class MainMenuManager:
         #pygame.mixer.music.play(loops=-1)
 
         # Creates menu items and commands
-        menu_items = ['Start Server','Connect to Server', 'Quit']
+        menu_items = ['Start Server', 'Connect to Server', 'Quit']
         funcs = {'Connect to Server': self.start_client,
                  'Start Server': self.start_server,
                  'Quit': sys.exit}

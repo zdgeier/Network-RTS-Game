@@ -1,17 +1,14 @@
 class Player:
-    def __init__(self, bases, name):
+    def __init__(self, bases, isEnemy):
         self.money = 1000
         self.basesLeft = len(bases)
-        self.name = name
+        self.isEnemy = isEnemy
 
     def getBases(self):
         return self.basesLeft
 
     def getMoney(self):
         return self.money
-
-    def getName(self):
-        return self.name
 
     def addMoney(self, value):
         self.money += value
