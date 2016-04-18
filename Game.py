@@ -11,33 +11,37 @@ class RTSGame:
         global player1, player2
         entities = []
 
-        self.basesP1 = []
-        self.basesP1.append(Base(WHITE,(100,100,100,100), pygame.image.load("Images/temp.png")))
-        self.basesP1.append(Base(WHITE,(100,350,100,100), pygame.image.load("Images/temp.png")))
-        self.basesP1.append(Base(WHITE,(100,600,100,100), pygame.image.load("Images/temp.png")))
+        # Make base entities
+        self.my_bases = []
+        self.my_bases.append(Base(WHITE, (100, 100, 100, 100), pygame.image.load("Images/temp.png")))
+        self.my_bases.append(Base(WHITE, (100, 350, 100, 100), pygame.image.load("Images/temp.png")))
+        self.my_bases.append(Base(WHITE, (100, 600, 100, 100), pygame.image.load("Images/temp.png")))
+        entities.append(self.my_bases)
 
-        self.basesP2 = []
-        self.basesP2.append(Base(WHITE,(1200,100,100,100), pygame.image.load("Images/temp.png")))
-        self.basesP2.append(Base(WHITE,(1200,350,100,100), pygame.image.load("Images/temp.png")))
-        self.basesP2.append(Base(WHITE,(1200,600,100,100), pygame.image.load("Images/temp.png")))
-        entities.append(self.basesP1)
-        entities.append(self.basesP2)
+        # Make enemy base entities
+        self.enemy_bases = []
+        self.enemy_bases.append(Base(WHITE, (1200, 100, 100, 100), pygame.image.load("Images/temp.png")))
+        self.enemy_bases.append(Base(WHITE, (1200, 350, 100, 100), pygame.image.load("Images/temp.png")))
+        self.enemy_bases.append(Base(WHITE, (1200, 600, 100, 100), pygame.image.load("Images/temp.png")))
+        entities.append(self.enemy_bases)
 
-        paths = []
-        paths.append(Box(BROWN,((200,112.5,1000,75)), pygame.image.load("Images/temp.png")))
-        paths.append(Box(BROWN,((200,362.5,1000,75)), pygame.image.load("Images/temp.png")))
-        paths.append(Box(BROWN,((200,612.5,1000,75)), pygame.image.load("Images/temp.png")))
-        entities.append(paths)
+        # Make path entities
+        self.paths = []
+        self.paths.append(Box(BROWN,(200,112.5,1000,75), pygame.image.load("Images/temp.png")))
+        self.paths.append(Box(BROWN,(200,362.5,1000,75), pygame.image.load("Images/temp.png")))
+        self.paths.append(Box(BROWN,(200,612.5,1000,75), pygame.image.load("Images/temp.png")))
+        entities.append(self.paths)
+
+        # Make button entities
+        self.buttons = []
+        self.buttons.append(Button(WHITE, (300,25), self.spawn_unit,pygame.image.load(MELEE_IMAGE), "Melee"))
+        self.buttons.append(Button(WHITE, (500,25), self.spawn_unit,pygame.image.load(ARCHER_IMAGE), "Ranged"))
+        self.buttons.append(Button(WHITE, (700,25), self.spawn_unit,pygame.image.load(RECON_IMAGE), "Recon"))
+        self.buttons.append(Button(WHITE, (900,25), self.spawn_unit,pygame.image.load(TANK_IMAGE), "Tank"))
+        entities.append(self.buttons)
 
         self.units = []
         entities.append(self.units)
-
-        self.buttons = []
-        self.buttons.append(Button(WHITE, (300,25), self.spawn_unit,pygame.image.load("Images/Melee_B.png"), "Melee"))
-        self.buttons.append(Button(WHITE, (500,25), self.spawn_unit,pygame.image.load("Images/Archer_B.png"), "Ranged"))
-        self.buttons.append(Button(WHITE, (700,25), self.spawn_unit,pygame.image.load("Images/Recon_B.png"), "Recon"))
-        self.buttons.append(Button(WHITE, (900,25), self.spawn_unit,pygame.image.load("Images/Tank_B.png"), "Tank"))
-        entities.append(self.buttons)
 
         # Performance improvements
         #self.screen = pygame.display.set_mode((1366, 768), (pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF))
@@ -60,7 +64,7 @@ class RTSGame:
             if not do.empty():
                 dict = do.get()
                 method = getattr(self, dict['name'])
-                method(dict['params'])
+                method(dict['type'], dict['base'])
 
             for event in events:
                 if event.type == pygame.QUIT:
@@ -68,7 +72,7 @@ class RTSGame:
                     sys.exit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     pos = pygame.mouse.get_pos()
-                    self.checkBounds(pos)
+                    self.clicked(pos)
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         sys.exit()
@@ -79,9 +83,8 @@ class RTSGame:
 
     # TODO: Remove dependency on base class
     # TODO: ^ Do not spawn enemies based on class
-    # TODO: Learn Git
     def spawn_unit(self, unit):
-        for base in self.basesP1:
+        for base in self.my_bases:
             if base.active:
                 coords = base.getcoords()
                 if unit == "Melee":
@@ -115,19 +118,27 @@ class RTSGame:
                 '''
                 self.units.append(unit)
 
+    def spawn_enemy(self, type, base):
+        spawnpoint = self.enemy_bases[base]
+        coords = spawnpoint.getcoords()
+        if type == "Melee":
+            cost = MELEECOST
+            unit = Melee(GREY, (coords[0] + coords[2], coords[1] + coords[3] / 2 - 25), LEFT)
+
+        self.units.append(unit)
+
     def checkCollision(self):
         for unit in self.units:
             ounits = [u for u in self.units if unit.intersects(u.getpos()) and not unit == u]
             if ounits:  # list is not empty
                 for u in ounits:
-                    #if u.getPlayer() != unit.getPlayer():
                     self.units.remove(u)
                     self.units.remove(unit)
 
-    def checkBounds(self, pos):
-        for base in self.basesP1:
+    def clicked(self, pos):
+        for base in self.my_bases:
             if base.intersects(pos):
-                for b in self.basesP1:
+                for b in self.my_bases:
                     b.setUnactive()  # Sets all bases to unactive
                 base.setActive()  # Sets the active base to active
                 break
@@ -135,7 +146,7 @@ class RTSGame:
         for button in self.buttons:
             if button.intersects(pos):
                 button.clicked()
-                self.send.put('Spawn Melee') ## rEMOVE
+                self.send.put("{'name': 'spawn_enemy', 'type': 'Melee', 'base': 2}") # TODO: REMOVE
                 break
 
         return

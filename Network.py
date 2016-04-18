@@ -13,15 +13,14 @@ class _Network:
     def start_receive(self):
         while True:
             data = self.sock.recv(1024)
-            #unpacked = pickle.loads(data)
             unpacked = data.decode()
             self.execute(unpacked)
+
             if not self.send.empty():
                 data = self.send.get(False)  # Does not wait for actions to contain something
-                print(data)
             else:
                 data = ' '
-            #packed = pickle.dumps(data)
+
             packed = data.encode()
             self.sock.sendall(packed)
 
@@ -29,20 +28,19 @@ class _Network:
         while True:
             if not self.send.empty():
                 data = self.send.get(False)  # Does not wait for actions to contain something
-                print(data)
             else:
                 data = ' '
-            #packed = pickle.dumps(data)
+
             packed = data.encode()
             self.sock.sendall(packed)
+
             data = self.sock.recv(1024)
-            #unpacked = pickle.loads(data)
             unpacked = data.decode()
             self.execute(unpacked)
 
     def execute(self, command):
-        if command == 'Spawn Melee':
-            self.do.put({'name': 'spawn_unit', 'params': 'Melee'})
+        if not command == ' ':
+            self.do.put(eval(command))
 
 
 class Server(_Network):

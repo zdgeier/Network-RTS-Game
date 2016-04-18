@@ -5,6 +5,12 @@ BLACK = (0, 0, 0)
 GREY = (204, 204, 204)
 BROWN = (165, 42, 42)
 
+# Image Paths
+MELEE_IMAGE = "Images/Melee_B.png"
+ARCHER_IMAGE = "Images/Archer_B.png"
+RECON_IMAGE = "Images/Recon_B.png"
+TANK_IMAGE = "Images/Tank_B.png"
+
 # Networking
 HOST = 'localhost'  # Symbolic name meaning all available interfaces
 PORT = 8880  # Arbitrary non-privileged port
