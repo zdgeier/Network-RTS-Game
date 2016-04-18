@@ -3,8 +3,6 @@ import socket
 from Constants import HOST
 from Constants import PORT
 
-import pickle
-
 
 class _Network:
     def __init__(self, do, send):
@@ -47,7 +45,6 @@ class _Network:
             self.do.put({'name': 'spawn_unit', 'params': 'Melee'})
 
 
-
 class Server(_Network):
     def __init__(self, do, send):
         _Network.__init__(self, do, send)
@@ -58,7 +55,6 @@ class Server(_Network):
         self.send.put('Start it!')
 
         self.start_receive()
-
 
 
 class Client(_Network):

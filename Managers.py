@@ -1,7 +1,7 @@
 import pygame
 import sys
 import InputBox
-import Network as net
+import Network as Net
 from Menus import GameMenu
 from Constants import BLACK
 from threading import Thread
@@ -13,7 +13,6 @@ class MainMenuManager:
         # Creating the screen
         pygame.init()
         self.screen = pygame.display.set_mode((360,240), 0, 32)
-        print(pygame.display.Info())
 
         menu_items = ['Login', 'Quit']
         funcs = {'Login': self.login,
@@ -39,13 +38,14 @@ class MainMenuManager:
         self.screen = pygame.display.set_mode((1366, 768), (pygame.HWSURFACE | pygame.DOUBLEBUF))
 
         # Loops in-game music
+        # TODO: Reinitialize music (update track?)
         #pygame.mixer.music.load('Waterflame - Glorious morning.mp3')
         #pygame.mixer.music.play(loops=-1)
 
         # Creates menu items and commands
-        menu_items = ['Start', 'Connect to Server', 'Start Server', 'Quit']
-        funcs = {'Start Server': self.start_server,
-                 'Connect to Server': self.start_client,
+        menu_items = ['Start Server','Connect to Server', 'Quit']
+        funcs = {'Connect to Server': self.start_client,
+                 'Start Server': self.start_server,
                  'Quit': sys.exit}
 
         # Shows and executes main menu
@@ -57,7 +57,7 @@ class MainMenuManager:
         send = queues.Queue()
         do = queues.Queue()
 
-        server = Thread(target=net.Server, args=(do, send))
+        server = Thread(target=Net.Server, args=(do, send))
         server.daemon = True
         server.start()
 
@@ -73,7 +73,7 @@ class MainMenuManager:
         send = queues.Queue()
         do = queues.Queue()
 
-        client = Thread(target=net.Client, args=(do, send))
+        client = Thread(target=Net.Client, args=(do, send))
         client.daemon = True
         client.start()
 

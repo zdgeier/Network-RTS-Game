@@ -121,7 +121,7 @@ class GameMenu():
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    mainloop = False
+                    sys.exit(0)
                 if event.type == pygame.KEYDOWN:
                     self.mouse_is_visible = False
                     self.set_keyboard_selection(event.key)
