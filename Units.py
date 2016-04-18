@@ -1,15 +1,16 @@
 import pygame
-from Constants import GREY
-from Constants import WHITE
-
+from Constants import *
 
 # BASIC UNITS
 
 class _Unit:  # _ = implementation class
 
-    def __init__(self, color, coords):
+    def __init__(self, color, coords, image):
         self.color = color
         self.coords = coords
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.rect = self.rect.move(self.getpos())
 
     def intersects(self, pos):
         return self.coords[0] <= pos[0] <= self.coords[0] + self.coords[2] \
@@ -31,13 +32,15 @@ class _Unit:  # _ = implementation class
         self.color = color
 
     def drawon(self, screen, dt):
+        #screen.blit(self.image, self.rect)
         pygame.draw.rect(screen, self.getcolor(), self.getcoords())
 
 
 class Base(_Unit):
-    def __init__(self, color, coords):
-        _Unit.__init__(self, color, coords)
+    def __init__(self, color, coords, image):
+        _Unit.__init__(self, color, coords, pygame.transform.scale(image, (100, 100)))
         self.active = False
+        self.health = 250
 
     def setActive(self):
         self.active = True
@@ -49,53 +52,88 @@ class Base(_Unit):
 
 
 class Box(_Unit):
-    def __init__(self, color, coords):
-        _Unit.__init__(self, color, coords)
+    def __init__(self, color, coords, image):
+        _Unit.__init__(self, color, coords, pygame.transform.scale(image, (100, 100)))
 
 
 class Button(_Unit):
-    def __init__(self, color, coords, command):
-        _Unit.__init__(self, color, coords)
+    def __init__(self, color, coords, command, image, unit):
+        _Unit.__init__(self, color, coords, pygame.transform.scale(image, (100, 75)))
         self.command = command
+        self.unit = unit
 
     def clicked(self):
-        self.command()
+        self.command(self.unit)
 
+    def drawon(self, screen, dt):
+        screen.blit(self.image, self.rect)
+
+    def intersects(self, pos):
+        return self.rect.x <= pos[0] <= self.rect.x + self.rect.width \
+               and self.rect.y <= pos[1] <= self.rect.y + self.rect.height
 
 # MOVING UNITS
 
-
 class _MovingUnit(_Unit):
-    def __init__(self, color, coords, health, rnge, cost, speed, damage):
-        _Unit.__init__(self, color, coords)
+    def __init__(self, color, coords, health, range, cost, speed, damage, reward, image):
+        _Unit.__init__(self, color, coords, pygame.transform.scale(image, (75, 75)))
         self.health = health
-        self.range = rnge
+        self.range = range
         self.cost = cost
         self.speed = speed
         self.damage = damage
+        self.reward = reward
 
     def drawon(self, screen, dt):
         # Increases x-coord in tuple by dt
         lst = list(self.coords)
-        lst[0] += self.speed * (1 / float(dt))
+        dx = (self.speed * (1 / float(dt)))
+        lst[0] += dx
         self.setcoords(tuple(lst))
-        pygame.draw.rect(screen, self.getcolor(), self.getcoords())
+        #pygame.draw.rect(screen, self.getcolor(), self.getcoords())
+        self.rect = self.rect.move(dx, 0)
+        screen.blit(self.image, self.rect)
+
+    def getReward(self):
+        return self.reward
+
+    def getPlayer(self):
+        return self.player
+
+    def intersects(self, pos):
+        return self.rect.x <= pos[0] <= self.rect.x + self.rect.width \
+               and self.rect.y <= pos[1] <= self.rect.y + self.rect.height
 
 class Melee(_MovingUnit):
     def __init__(self, color, coords, dir):
-        _MovingUnit.__init__(self, color, coords, 100, 1, 100, dir*20, 5)
+        image = pygame.image.load("Images/Melee.png")
+        '''
+        if player.getName() == "player1":
+            image = pygame.transform.flip(image, True, False)
+        '''
+        _MovingUnit.__init__(self, color, coords, MELEEHP, MELEERANGE, MELEECOST, dir*23, MELEEDAMAGE, MELEEREWARD, image)
 
-
+'''
 class Ranged(_MovingUnit):
-    def __init__(self, color, coords, dir):
-        _MovingUnit.__init__(self, color, coords, 100, 1, 100, dir*20, 5)
+    def __init__(self, color, coords, dir, player):
+        image = pygame.image.load("Images/Archer.png")
+        if player.getName() == "player1":
+            image = pygame.transform.flip(image, True, False)
+        _MovingUnit.__init__(self, color, coords, RANGEHP, RANGERANGE, RANGECOST, dir*21, RANGEDAMAGE, RANGEREWARD, image, player)
 
 
 class Tank(_MovingUnit):
-    def __init__(self, color, coords, dir):
-        _MovingUnit.__init__(self, color, coords, 100, 1, 100, dir*20, 5)
+    def __init__(self, color, coords, dir, player):
+        image = pygame.image.load("Images/Tank.gif")
+        if player.getName() == "player2":
+            image = pygame.transform.flip(image, True, False)
+        _MovingUnit.__init__(self, color, coords, TANKHP, TANKRANGE, TANKCOST, dir*20, TANKDAMAGE, TANKREWARD, image, player)
 
 
 class Recon(_MovingUnit):
-    def __init__(self, color, coords, dir):
-        _MovingUnit.__init__(self, color, coords, 100, 1, 100, dir*20, 5)
+    def __init__(self, color, coords, dir, player):
+        image = pygame.image.load("Images/Archer.png")
+        if player.getName() == "player1":
+            image = pygame.transform.flip(image, True, False)
+        _MovingUnit.__init__(self, color, coords, RECONHP, RECONRANGE, RECONCOST, dir*30, RECONDAMAGE, RECONREWARD, image, player)
+'''

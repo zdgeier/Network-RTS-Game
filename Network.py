@@ -1,46 +1,73 @@
 # Echo server program
 import socket
+from Constants import HOST
+from Constants import PORT
+
 import pickle
-from _thread import *
 
-class Server:
-    def __init__(self):
-        self.connections = []
-        HOST = 'localhost'       # Symbolic name meaning all available interfaces
-        PORT = 8880              # Arbitrary non-privileged port
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.bind((HOST, PORT))
 
-        start_new_thread(self.handle_joins, ())
-        start_new_thread(self.handle_broadcast(), ())
+class _Network:
+    def __init__(self, do, send):
+        self.do = do
+        self.send = send
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    def handle_joins(self):
+    def start_receive(self):
         while True:
-            self.s.listen(1)
-            conn, addr = self.s.accept()
-            print('Connected by', addr)
-            self.connections.append(conn)
+            data = self.sock.recv(1024)
+            #unpacked = pickle.loads(data)
+            unpacked = data.decode()
+            self.execute(unpacked)
+            if not self.send.empty():
+                data = self.send.get(False)  # Does not wait for actions to contain something
+                print(data)
+            else:
+                data = ' '
+            #packed = pickle.dumps(data)
+            packed = data.encode()
+            self.sock.sendall(packed)
 
-    def handle_broadcast(self):
+    def start_send(self):
         while True:
-            datas = []
-            for conn in self.connections:
-                data = conn.recv(1024)
-                datas.append(data.decode())
-            for conn in self.connections:
-                conn.sendall(str(datas).encode())
+            if not self.send.empty():
+                data = self.send.get(False)  # Does not wait for actions to contain something
+                print(data)
+            else:
+                data = ' '
+            #packed = pickle.dumps(data)
+            packed = data.encode()
+            self.sock.sendall(packed)
+            data = self.sock.recv(1024)
+            #unpacked = pickle.loads(data)
+            unpacked = data.decode()
+            self.execute(unpacked)
+
+    def execute(self, command):
+        if command == 'Spawn Melee':
+            self.do.put({'name': 'spawn_unit', 'params': 'Melee'})
 
 
 
-class Client:
-    def __init__(self):
-        HOST = 'localhost'  # The remote host
-        PORT = 8880  # The same port as used by the server
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((HOST, PORT))
+class Server(_Network):
+    def __init__(self, do, send):
+        _Network.__init__(self, do, send)
+        self.isServer = True
+        self.sock.bind((HOST, PORT))
+        self.sock.listen(1)
+        self.sock, addr = self.sock.accept()  # Wait for connect
+        self.send.put('Start it!')
 
-        while True:
-            s.sendall(b'Username')
-            data = s.recv(1024)
-            print(eval(data.decode()))
-        s.close()
+        self.start_receive()
+
+
+
+class Client(_Network):
+    def __init__(self, do, send):
+        _Network.__init__(self, do, send)
+        self.isServer = False
+        self.sock.connect((HOST, PORT))
+        self.send.put('Start it!')
+
+        self.start_send()
+
+

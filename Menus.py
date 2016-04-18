@@ -2,7 +2,6 @@ import pygame
 import sys
 from Constants import *
 
-
 class MenuItem(pygame.font.Font):
     def __init__(self, text, font=None, font_size=30, font_color=WHITE, pos=(0, 0)):
         pos_x = pos[0]
@@ -39,11 +38,6 @@ class MenuItem(pygame.font.Font):
 class GameMenu():
     def __init__(self, screen, items, funcs, bg_color=BLACK, font=None, font_size=30,
                  font_color=WHITE):
-
-        pygame.init()
-        pygame.mixer.music.load('Waterflame - Glorious morning.mp3')
-        pygame.mixer.music.play()
-
         self.screen = screen
         self.scr_width = self.screen.get_rect().width
         self.scr_height = self.screen.get_rect().height
@@ -118,10 +112,10 @@ class GameMenu():
             item.set_italic(False)
 
     def run(self):
-        mainloop = True
-        while mainloop:
-            # Limit frame speed to 50 FPS
-            self.clock.tick(50)
+        self.mainloop = True
+        while self.mainloop:
+            # Limit frame speed to 30 FPS
+            self.clock.tick(30)
 
             mpos = pygame.mouse.get_pos()
 
@@ -151,5 +145,3 @@ class GameMenu():
                 self.screen.blit(item.label, item.position)
 
             pygame.display.flip()
-
-
