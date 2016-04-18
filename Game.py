@@ -2,7 +2,6 @@ from Units import *
 from Constants import *
 from Player import Player
 import sys
-from Queue import Queue
 
 class RTSGame:
     def __init__(self, do, send):
@@ -47,12 +46,12 @@ class RTSGame:
 
         clock = pygame.time.Clock()
 
-        running = True
-        while running:
+        # Main Render Loop
+        while True:
             dt = clock.tick(50)
 
             events = pygame.event.get()
-            self.screen.fill((144, 245, 0))
+            self.screen.fill((144, 245, 0))  # Green background
 
             for entity in entities:
                 for item in entity:
@@ -78,6 +77,8 @@ class RTSGame:
 
             pygame.display.flip()
 
+    # TODO: Remove dependency on base class
+    # TODO: ^ Do not spawn enemies based on class
     def spawn_unit(self, unit):
         for base in self.basesP1:
             if base.active:

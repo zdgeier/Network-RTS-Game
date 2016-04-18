@@ -58,10 +58,12 @@ class MainMenuManager:
         do = queues.Queue()
 
         server = Thread(target=net.Server, args=(do, send))
+        server.daemon = True
         server.start()
 
         # Wait until network has started
         self.screen.fill(BLACK)
+
         send.get()  # TODO: "Waiting for connection..." screen
 
         game = RTSGame(do, send)
@@ -72,6 +74,7 @@ class MainMenuManager:
         do = queues.Queue()
 
         client = Thread(target=net.Client, args=(do, send))
+        client.daemon = True
         client.start()
 
         # Wait until network has started
